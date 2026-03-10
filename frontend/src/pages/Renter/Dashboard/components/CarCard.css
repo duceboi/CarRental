@@ -1,0 +1,111 @@
+.vehicle-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.8)),
+    linear-gradient(135deg, rgba(234, 238, 255, 0.44), rgba(255, 240, 228, 0.24));
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.vehicle-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, #8b65f3 0%, #df7f3d 100%);
+}
+
+.vehicle-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+.vehicle-card__top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.vehicle-card__title {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vehicle-card__title h3 {
+  margin: 0;
+  font-size: 1.12rem;
+  color: var(--text-strong);
+}
+
+.vehicle-card__location {
+  margin: 0;
+  color: var(--text-body);
+  line-height: 1.6;
+}
+
+.vehicle-card__meta {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.vehicle-card__map-placeholder {
+  display: grid;
+  place-items: center;
+  min-height: 180px;
+  padding: 20px;
+  color: var(--text-body);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.76)),
+    linear-gradient(135deg, rgba(224, 244, 240, 0.32), rgba(255, 255, 255, 0.14));
+}
+
+.vehicle-card__cost {
+  padding: 18px;
+  border-radius: var(--radius-md);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.82)),
+    linear-gradient(135deg, rgba(255, 240, 228, 0.64), rgba(234, 238, 255, 0.36));
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+.vehicle-card__cost span {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.vehicle-card__cost strong {
+  display: block;
+  margin-top: 10px;
+  font-size: 1.45rem;
+  color: var(--accent-ink);
+}
+
+.vehicle-card__cost p {
+  margin: 8px 0 0;
+  color: var(--text-body);
+  line-height: 1.6;
+}
+
+@media (max-width: 720px) {
+  .vehicle-card {
+    padding: 20px;
+  }
+
+  .vehicle-card__meta {
+    grid-template-columns: 1fr;
+  }
+}

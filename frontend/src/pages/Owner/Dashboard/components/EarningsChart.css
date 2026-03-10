@@ -1,0 +1,54 @@
+.earnings-chart {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+  gap: 16px;
+  align-items: end;
+}
+
+.earnings-chart__column {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.earnings-chart__value,
+.earnings-chart__label {
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.earnings-chart__value {
+  color: var(--text-body);
+}
+
+.earnings-chart__label {
+  color: var(--text-muted);
+}
+
+.earnings-chart__track {
+  height: 180px;
+  padding: 10px;
+  display: flex;
+  align-items: flex-end;
+  border-radius: 20px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.84)),
+    linear-gradient(135deg, rgba(234, 238, 255, 0.44), rgba(255, 240, 228, 0.28));
+  border: 1px solid rgba(255, 255, 255, 0.76);
+}
+
+.earnings-chart__bar {
+  width: 100%;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #8b65f3 0%, #dd7f3b 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.earnings-chart__empty {
+  padding: 22px;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--line-strong);
+  color: var(--text-body);
+  line-height: 1.6;
+  background: rgba(255, 255, 255, 0.7);
+}

@@ -1,0 +1,14 @@
+# Root security
+.env
+.DS_Store
+
+# Backend specific
+backend/.env
+backend/node_modules/
+backend/artifacts/
+backend/cache/
+
+# Frontend specific
+frontend/.env
+frontend/node_modules/
+frontend/dist/

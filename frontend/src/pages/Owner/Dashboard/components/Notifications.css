@@ -1,0 +1,15 @@
+.view-all-btn {
+  background: linear-gradient(135deg, #7c7cff, #ff6ec7);
+  border: none;
+  color: white;
+  padding: 6px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.notifications-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}

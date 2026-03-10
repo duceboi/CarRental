@@ -1,0 +1,57 @@
+.earnings-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 28px;
+  background:
+    radial-gradient(circle at top right, rgba(108, 143, 246, 0.14), transparent 24%),
+    radial-gradient(circle at bottom left, rgba(207, 106, 45, 0.12), transparent 24%);
+}
+
+.earnings-panel__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+}
+
+.earnings-panel__headline {
+  min-width: 220px;
+  padding: 20px;
+  border-radius: var(--radius-md);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.82)),
+    linear-gradient(135deg, rgba(255, 240, 228, 0.66), rgba(234, 238, 255, 0.42));
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  box-shadow: var(--shadow-md);
+}
+
+.earnings-panel__headline strong {
+  display: block;
+  margin-top: 8px;
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
+  color: var(--accent-ink);
+}
+
+.earnings-panel__stats {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.earnings-panel__chart {
+  padding-top: 6px;
+}
+
+@media (max-width: 980px) {
+  .earnings-panel__header {
+    flex-direction: column;
+  }
+
+  .earnings-panel__headline {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .earnings-panel__stats {
+    grid-template-columns: 1fr;
+  }
+}

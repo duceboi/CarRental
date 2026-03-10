@@ -1,0 +1,113 @@
+@import "../../../styles/layout.css";
+
+.owner-dashboard {
+  gap: 24px;
+}
+
+.owner-register-panel,
+.owner-preview-panel {
+  padding: 28px;
+}
+
+.owner-register-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  background:
+    radial-gradient(circle at top right, rgba(108, 143, 246, 0.12), transparent 26%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.18), transparent 56%);
+}
+
+.owner-register-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 18px;
+}
+
+.owner-register-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.owner-register-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.owner-dashboard__bottom {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.owner-preview-grid {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.owner-preview-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.76);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.76)),
+    linear-gradient(135deg, rgba(255, 240, 228, 0.36), rgba(234, 238, 255, 0.18));
+  box-shadow: 0 14px 30px rgba(18, 31, 50, 0.06);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.owner-preview-card:nth-child(2n) {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.76)),
+    linear-gradient(135deg, rgba(224, 244, 240, 0.38), rgba(255, 255, 255, 0.18));
+}
+
+.owner-preview-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+.owner-preview-card__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.owner-preview-card h3 {
+  margin: 0;
+  font-size: 1.12rem;
+  color: var(--text-strong);
+}
+
+.owner-preview-card p {
+  margin: 0;
+  color: var(--text-body);
+  line-height: 1.6;
+}
+
+.owner-dashboard__bottom > * {
+  height: 100%;
+}
+
+@media (max-width: 1080px) {
+  .owner-register-grid,
+  .owner-dashboard__bottom {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .owner-register-panel,
+  .owner-preview-panel {
+    padding: 24px;
+  }
+}
