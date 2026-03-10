@@ -6,6 +6,7 @@ import {
   toggleCarAvailability,
   verifyFuelRefill,
 } from "../../../context/useCarRental";
+
 import "./OwnerCars.css";
 
 function getStatusMeta(status, fuelStatus) {
@@ -55,7 +56,7 @@ export default function OwnerCars() {
       setLoading(true);
       const allCars = await fetchAllCars();
       const owned = allCars.filter(
-        (car) => car.owner.toLowerCase() === account.toLowerCase()
+        (car) => car.owner.toLowerCase() === account.toLowerCase(),
       );
       setCars(owned);
     } catch (error) {
@@ -108,7 +109,7 @@ export default function OwnerCars() {
     const available = cars.filter((car) => Number(car.status) === 0).length;
     const rented = cars.filter((car) => Number(car.status) === 1).length;
     const fuelChecks = cars.filter(
-      (car) => Number(car.status) === 2 && Number(car.fuelStatus) === 1
+      (car) => Number(car.status) === 2 && Number(car.fuelStatus) === 1,
     ).length;
 
     return { total: cars.length, available, rented, fuelChecks };
@@ -120,10 +121,12 @@ export default function OwnerCars() {
         <section className="panel page-hero">
           <div className="page-hero__copy">
             <p className="page-hero__eyebrow">Fleet management</p>
-            <h1 className="page-hero__title">Your full vehicle inventory, without the clutter.</h1>
+            <h1 className="page-hero__title">
+              Your full vehicle inventory, without the clutter.
+            </h1>
             <p className="page-hero__text">
-              Every registered car, every visibility state, and every fuel verification checkpoint
-              is managed from this single owner view.
+              Every registered car, every visibility state, and every fuel
+              verification checkpoint is managed from this single owner view.
             </p>
           </div>
 
@@ -131,19 +134,25 @@ export default function OwnerCars() {
             <article className="hero-stat">
               <span className="hero-stat__label">Total cars</span>
               <strong className="hero-stat__value">{stats.total}</strong>
-              <span className="hero-stat__copy">Vehicles registered to the connected owner.</span>
+              <span className="hero-stat__copy">
+                Vehicles registered to the connected owner.
+              </span>
             </article>
 
             <article className="hero-stat">
               <span className="hero-stat__label">Marketplace ready</span>
               <strong className="hero-stat__value">{stats.available}</strong>
-              <span className="hero-stat__copy">Cars that renters can book right now.</span>
+              <span className="hero-stat__copy">
+                Cars that renters can book right now.
+              </span>
             </article>
 
             <article className="hero-stat">
               <span className="hero-stat__label">Action required</span>
               <strong className="hero-stat__value">{stats.fuelChecks}</strong>
-              <span className="hero-stat__copy">Returns waiting on your fuel verification.</span>
+              <span className="hero-stat__copy">
+                Returns waiting on your fuel verification.
+              </span>
             </article>
           </div>
         </section>
@@ -153,12 +162,15 @@ export default function OwnerCars() {
             <p className="section-kicker">Fleet list</p>
             <h2 className="section-title">Every registered vehicle</h2>
             <p className="section-copy">
-              Toggle visibility, monitor rented cars, or verify fuel on returned vehicles before
-              reopening them to the market.
+              Toggle visibility, monitor rented cars, or verify fuel on returned
+              vehicles before reopening them to the market.
             </p>
           </div>
 
-          <button className="ui-button ui-button--ghost" onClick={() => navigate("/owner")}>
+          <button
+            className="ui-button ui-button--ghost"
+            onClick={() => navigate("/owner")}
+          >
             Back to dashboard
           </button>
         </div>
@@ -167,7 +179,8 @@ export default function OwnerCars() {
           <div className="empty-state">
             <p className="empty-state__title">Loading fleet data</p>
             <p className="empty-state__copy">
-              Pulling vehicle state from the blockchain and preparing the fleet view.
+              Pulling vehicle state from the blockchain and preparing the fleet
+              view.
             </p>
           </div>
         ) : cars.length > 0 ? (
@@ -185,6 +198,27 @@ export default function OwnerCars() {
                   key={car.id}
                   className={`panel fleet-card${needsFuelVerify ? " fleet-card--attention" : ""}`}
                 >
+                  {(() => {
+                    const stored = localStorage.getItem(`car_images_${car.id}`);
+                    const urls = stored ? JSON.parse(stored) : [];
+                    if (urls.length === 0) return null;
+                    return (
+                      <div className="fleet-card__photos">
+                        {urls.map((url, i) => (
+                          <img
+                            key={i}
+                            src={url}
+                            alt={`${car.model} photo ${i + 1}`}
+                            className="fleet-card__photo"
+                            onError={(e) => {
+                              e.currentTarget.style.display = "none";
+                            }}
+                          />
+                        ))}
+                      </div>
+                    );
+                  })()}
+
                   <div className="fleet-card__top">
                     <div className="fleet-card__title">
                       <span className="item-eyebrow">Car #{car.id}</span>
@@ -204,7 +238,11 @@ export default function OwnerCars() {
                     </div>
                     <div className="info-card">
                       <span>Fuel</span>
-                      <strong>{fuelStatus === 0 ? "Verified full" : "Awaiting owner check"}</strong>
+                      <strong>
+                        {fuelStatus === 0
+                          ? "Verified full"
+                          : "Awaiting owner check"}
+                      </strong>
                     </div>
                   </div>
 
@@ -212,14 +250,16 @@ export default function OwnerCars() {
 
                   {needsFuelVerify && (
                     <div className="notice-banner notice-banner--warning">
-                      Confirm the tank is full after the physical inspection, then verify the car so
-                      it can return to the marketplace.
+                      Confirm the tank is full after the physical inspection,
+                      then verify the car so it can return to the marketplace.
                     </div>
                   )}
 
                   <div className="fleet-card__actions">
                     {status === 1 ? (
-                      <span className="subtle-badge">Awaiting renter return</span>
+                      <span className="subtle-badge">
+                        Awaiting renter return
+                      </span>
                     ) : needsFuelVerify ? (
                       <button
                         className="ui-button ui-button--warning"
@@ -238,7 +278,11 @@ export default function OwnerCars() {
                         onClick={() => handleToggle(car.id, status)}
                         disabled={isProcessing}
                       >
-                        {isProcessing ? "Updating" : status === 0 ? "Hide from market" : "Make available"}
+                        {isProcessing
+                          ? "Updating"
+                          : status === 0
+                            ? "Hide from market"
+                            : "Make available"}
                       </button>
                     )}
 
@@ -246,7 +290,7 @@ export default function OwnerCars() {
                       <a
                         className="ui-link"
                         href={`https://www.openstreetmap.org/search?query=${encodeURIComponent(
-                          car.location
+                          car.location,
                         )}`}
                         target="_blank"
                         rel="noopener noreferrer"
@@ -263,7 +307,8 @@ export default function OwnerCars() {
           <div className="empty-state">
             <p className="empty-state__title">No cars to manage</p>
             <p className="empty-state__copy">
-              Return to the dashboard and register your first vehicle to start building the fleet.
+              Return to the dashboard and register your first vehicle to start
+              building the fleet.
             </p>
           </div>
         )}

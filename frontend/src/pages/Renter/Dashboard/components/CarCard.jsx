@@ -1,8 +1,17 @@
-import { useContext, useState, useCallback, useEffect, useRef } from "react";
+import {
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+  useRef,
+  useMemo,
+} from "react";
+import { createPortal } from "react-dom";
 import { Web3Context } from "../../../../context/Web3Context";
 import { rentCar } from "../../../../context/useCarRental";
 import MapPreview from "../../../../components/MapPreview";
 import { buildOsmDirectUrl, geocodeLocation } from "../../../../lib/location";
+
 import "./CarCard.css";
 
 export default function CarCard({ car, bookingDates, onAutoFill }) {
@@ -12,14 +21,34 @@ export default function CarCard({ car, bookingDates, onAutoFill }) {
   const [mapCoords, setMapCoords] = useState(null);
   const [geocoding, setGeocoding] = useState(false);
   const [mapError, setMapError] = useState("");
+  const [lightboxIndex, setLightboxIndex] = useState(null);
   const geocodeAbortRef = useRef(null);
+
+  const carUrls = useMemo(() => {
+    const stored = localStorage.getItem(`car_images_${car.id}`);
+    return stored ? JSON.parse(stored) : [];
+  }, [car.id]);
 
   useEffect(
     () => () => {
       geocodeAbortRef.current?.abort();
     },
-    []
+    [],
   );
+
+  // Keyboard navigation for lightbox
+  useEffect(() => {
+    if (lightboxIndex === null) return;
+    const handleKey = (e) => {
+      if (e.key === "Escape") setLightboxIndex(null);
+      if (e.key === "ArrowRight")
+        setLightboxIndex((i) => (i + 1) % carUrls.length);
+      if (e.key === "ArrowLeft")
+        setLightboxIndex((i) => (i - 1 + carUrls.length) % carUrls.length);
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [lightboxIndex, carUrls.length]);
 
   const calculateDays = () => {
     if (!bookingDates?.startDate || !bookingDates?.endDate) return 0;
@@ -34,7 +63,8 @@ export default function CarCard({ car, bookingDates, onAutoFill }) {
   };
 
   const days = calculateDays();
-  const totalCost = days > 0 ? (days * parseFloat(car.pricePerDay)).toFixed(4) : "0.0000";
+  const totalCost =
+    days > 0 ? (days * parseFloat(car.pricePerDay)).toFixed(4) : "0.0000";
 
   const handleRentClick = async () => {
     if (!account || !signer) {
@@ -49,7 +79,13 @@ export default function CarCard({ car, bookingDates, onAutoFill }) {
 
     try {
       setLoading(true);
-      await rentCar(signer, car.id, bookingDates.startDate, bookingDates.endDate, totalCost);
+      await rentCar(
+        signer,
+        car.id,
+        bookingDates.startDate,
+        bookingDates.endDate,
+        totalCost,
+      );
       alert("Rental submitted successfully.");
       window.location.reload();
     } catch (error) {
@@ -71,7 +107,9 @@ export default function CarCard({ car, bookingDates, onAutoFill }) {
       setMapError("");
 
       try {
-        const coords = await geocodeLocation(car.location, { signal: controller.signal });
+        const coords = await geocodeLocation(car.location, {
+          signal: controller.signal,
+        });
         if (coords) {
           setMapCoords({ lat: coords.lat, lon: coords.lon });
         } else {
@@ -94,6 +132,23 @@ export default function CarCard({ car, bookingDates, onAutoFill }) {
 
   return (
     <article className="vehicle-card">
+      {carUrls.length > 0 && (
+        <div className="vehicle-card__photos">
+          {carUrls.map((url, i) => (
+            <img
+              key={i}
+              src={url}
+              alt={`${car.model} photo ${i + 1}`}
+              className="vehicle-card__photo"
+              onClick={() => setLightboxIndex(i)}
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+              }}
+            />
+          ))}
+        </div>
+      )}
+
       <div className="vehicle-card__top">
         <div className="vehicle-card__title">
           <span className="item-eyebrow">Available now</span>
@@ -112,12 +167,18 @@ export default function CarCard({ car, bookingDates, onAutoFill }) {
         </div>
         <div className="info-card">
           <span>Stay length</span>
-          <strong>{days > 0 ? `${days} day${days === 1 ? "" : "s"}` : "Select dates"}</strong>
+          <strong>
+            {days > 0 ? `${days} day${days === 1 ? "" : "s"}` : "Select dates"}
+          </strong>
         </div>
       </div>
 
       <div className="inline-actions">
-        <button className="ui-button ui-button--ghost" onClick={handleToggleMap} disabled={geocoding}>
+        <button
+          className="ui-button ui-button--ghost"
+          onClick={handleToggleMap}
+          disabled={geocoding}
+        >
           {geocoding ? "Loading map" : showMap ? "Hide map" : "Preview map"}
         </button>
 
@@ -137,7 +198,9 @@ export default function CarCard({ car, bookingDates, onAutoFill }) {
         <div className="vehicle-card__map">
           {geocoding || !mapCoords ? (
             <div className="vehicle-card__map-placeholder">
-              {geocoding ? "Loading map preview" : mapError || "Map preview unavailable for this location"}
+              {geocoding
+                ? "Loading map preview"
+                : mapError || "Map preview unavailable for this location"}
             </div>
           ) : (
             <MapPreview
@@ -161,12 +224,82 @@ export default function CarCard({ car, bookingDates, onAutoFill }) {
           </p>
         </div>
       ) : (
-        <p className="field-help">Choose start and end dates to calculate the full rental price.</p>
+        <p className="field-help">
+          Choose start and end dates to calculate the full rental price.
+        </p>
       )}
 
-      <button className="ui-button ui-button--primary ui-button--wide" onClick={handleRentClick} disabled={loading}>
+      <button
+        className="ui-button ui-button--primary ui-button--wide"
+        onClick={handleRentClick}
+        disabled={loading}
+      >
         {loading ? "Processing" : days > 0 ? "Rent now" : "Select dates"}
       </button>
+
+      {/* Lightbox */}
+      {lightboxIndex !== null &&
+        createPortal(
+          <div
+            className="photo-lightbox"
+            role="dialog"
+            aria-modal="true"
+            aria-label={`${car.model} photos`}
+            onClick={() => setLightboxIndex(null)}
+          >
+            <button
+              className="photo-lightbox__close"
+              aria-label="Close"
+              onClick={() => setLightboxIndex(null)}
+            >
+              &#x2715;
+            </button>
+
+            {carUrls.length > 1 && (
+              <button
+                className="photo-lightbox__nav photo-lightbox__nav--prev"
+                aria-label="Previous photo"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setLightboxIndex(
+                    (i) => (i - 1 + carUrls.length) % carUrls.length,
+                  );
+                }}
+              >
+                &#8249;
+              </button>
+            )}
+
+            <div
+              className="photo-lightbox__frame"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <img
+                src={carUrls[lightboxIndex]}
+                alt={`${car.model} — photo ${lightboxIndex + 1} of ${carUrls.length}`}
+                className="photo-lightbox__img"
+              />
+            </div>
+
+            {carUrls.length > 1 && (
+              <button
+                className="photo-lightbox__nav photo-lightbox__nav--next"
+                aria-label="Next photo"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setLightboxIndex((i) => (i + 1) % carUrls.length);
+                }}
+              >
+                &#8250;
+              </button>
+            )}
+
+            <div className="photo-lightbox__counter">
+              {car.model} &middot; {lightboxIndex + 1} / {carUrls.length}
+            </div>
+          </div>,
+          document.body,
+        )}
     </article>
   );
 }

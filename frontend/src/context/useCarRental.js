@@ -22,6 +22,11 @@ export function getWriteContract(signer) {
 /* READ HELPERS                                                               */
 /* -------------------------------------------------------------------------- */
 
+export async function getCarCount() {
+  const contract = getReadContract();
+  return Number(await contract.carCount());
+}
+
 export async function fetchAllCars() {
   const contract = getReadContract();
   try {
@@ -37,7 +42,7 @@ export async function fetchAllCars() {
         pricePerDay: ethers.formatEther(car.pricePerDay),
         status: Number(car.status),
         earnings: ethers.formatEther(car.earnings),
-        fuelStatus: Number(car.fuelStatus) // 0 = Full, 1 = NeedsRefuel
+        fuelStatus: Number(car.fuelStatus), // 0 = Full, 1 = NeedsRefuel
       });
     }
     return cars;
@@ -57,7 +62,7 @@ export async function getActiveRental(carId) {
       startDate: Number(rental.startDate),
       endDate: Number(rental.endDate),
       paid: ethers.formatEther(rental.paid),
-      active: rental.active
+      active: rental.active,
     };
   } catch (error) {
     console.error("Error fetching active rental:", error);
@@ -115,20 +120,40 @@ export async function registerCar(signer, model, location, priceEth) {
     model,
     location,
     ethers.parseUnits(priceEth.toString(), "ether"),
-    { gasLimit: 500000 } 
+    { gasLimit: 500000 },
   );
-  return await tx.wait();
+  const receipt = await tx.wait();
+
+  // Parse the CarRegistered event to get the actual on-chain car ID
+  let carId = null;
+  for (const log of receipt.logs) {
+    try {
+      const parsed = contract.interface.parseLog(log);
+      if (parsed?.name === "CarRegistered") {
+        carId = Number(parsed.args[0]);
+        break;
+      }
+    } catch {
+      // Not our event, skip
+    }
+  }
+
+  return { receipt, carId };
 }
 
 /**
  * Toggles car visibility based on current status
  */
-export async function toggleCarAvailability(signer, carId, isCurrentlyAvailable) {
+export async function toggleCarAvailability(
+  signer,
+  carId,
+  isCurrentlyAvailable,
+) {
   try {
     const contract = getWriteContract(signer);
     // Call setCarUnavailable if currently 0, otherwise call setCarAvailable
-    const tx = isCurrentlyAvailable 
-      ? await contract.setCarUnavailable(carId) 
+    const tx = isCurrentlyAvailable
+      ? await contract.setCarUnavailable(carId)
       : await contract.setCarAvailable(carId);
     return await tx.wait();
   } catch (error) {
@@ -165,15 +190,10 @@ export async function rentCar(signer, carId, startDate, endDate, totalEth) {
     throw new Error("End date must be after start date.");
   }
 
-  const tx = await contract.rentCar(
-    carId, 
-    startTimestamp, 
-    endTimestamp, 
-    {
-      value: ethers.parseUnits(totalEth.toString(), "ether"),
-      gasLimit: 1000000 
-    }
-  );
+  const tx = await contract.rentCar(carId, startTimestamp, endTimestamp, {
+    value: ethers.parseUnits(totalEth.toString(), "ether"),
+    gasLimit: 1000000,
+  });
   return await tx.wait();
 }
 
@@ -215,7 +235,7 @@ export function listenToAllEvents(callback) {
 
   const handleEvent = async (carId, type, extraData = {}) => {
     const allCars = await fetchAllCars();
-    const carDetails = allCars.find(c => c.id === carId.toString());
+    const carDetails = allCars.find((c) => c.id === carId.toString());
     const carName = carDetails ? carDetails.model : `Car #${carId}`;
 
     if (type === "REGISTRATION") {
@@ -252,10 +272,10 @@ export function listenToAllEvents(callback) {
 
   contract.on("CarRegistered", (carId) => handleEvent(carId, "REGISTRATION"));
   contract.on("CarRented", (carId, renter, start, end, paid) =>
-    handleEvent(carId, "RENTAL", { renter, paid })
+    handleEvent(carId, "RENTAL", { renter, paid }),
   );
   contract.on("FuelRefillVerified", (carId) =>
-    handleEvent(carId, "FUEL_VERIFIED")
+    handleEvent(carId, "FUEL_VERIFIED"),
   );
   contract.on("RentalReturned", (carId) => handleEvent(carId, "RETURNED"));
 
