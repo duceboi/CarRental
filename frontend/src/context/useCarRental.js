@@ -110,6 +110,32 @@ export async function getRenterHistory(address) {
   }
 }
 
+/**
+ * Fetches all on-chain CarRented events for a specific car.
+ * Uses event log querying — no contract redeployment required.
+ * Returns entries newest-first.
+ */
+export async function getCarRentalHistory(carId) {
+  const contract = getReadContract();
+  try {
+    const filter = contract.filters.CarRented(carId);
+    const logs = await contract.queryFilter(filter);
+    return logs
+      .map((log) => ({
+        txHash: log.transactionHash,
+        blockNumber: log.blockNumber,
+        renter: log.args.renter,
+        startDate: Number(log.args.startDate),
+        endDate: Number(log.args.endDate),
+        paid: ethers.formatEther(log.args.paid),
+      }))
+      .reverse();
+  } catch (error) {
+    console.error("Error fetching car rental history:", error);
+    return [];
+  }
+}
+
 /* -------------------------------------------------------------------------- */
 /* OWNER ACTIONS                                                              */
 /* -------------------------------------------------------------------------- */

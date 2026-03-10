@@ -5,6 +5,7 @@ import {
   fetchAllCars,
   registerCar as registerCarOnChain,
   toggleCarAvailability,
+  verifyFuelRefill,
 } from "../../../context/useCarRental";
 import LocationInput from "../../../components/LocationInput";
 import { uploadImagesToCloudinary } from "../../../lib/cloudinary";
@@ -13,13 +14,24 @@ import EarningsOverview from "./components/EarningsOverview";
 import Notifications from "./components/Notifications";
 import "./OwnerDashboard.css";
 
-function getStatusMeta(status) {
+function getStatusMeta(status, fuelStatus) {
   if (Number(status) === 0) {
     return {
       label: "Available",
       tone: "status-chip status-chip--success",
       actionLabel: "Hide from market",
       actionClass: "ui-button ui-button--danger",
+      needsFuelVerify: false,
+    };
+  }
+
+  if (Number(status) === 2 && Number(fuelStatus) === 1) {
+    return {
+      label: "Fuel check required",
+      tone: "status-chip status-chip--warning",
+      actionLabel: "Verify fuel full",
+      actionClass: "ui-button ui-button--warning",
+      needsFuelVerify: true,
     };
   }
 
@@ -29,6 +41,7 @@ function getStatusMeta(status) {
       tone: "status-chip status-chip--neutral",
       actionLabel: "Make available",
       actionClass: "ui-button ui-button--success",
+      needsFuelVerify: false,
     };
   }
 
@@ -37,6 +50,7 @@ function getStatusMeta(status) {
     tone: "status-chip status-chip--warning",
     actionLabel: "",
     actionClass: "",
+    needsFuelVerify: false,
   };
 }
 
@@ -91,6 +105,7 @@ export default function OwnerDashboard() {
           id: car.id,
           model: car.model,
           status: car.status,
+          fuelStatus: car.fuelStatus,
           earnings: car.earnings,
         })),
       );
@@ -117,7 +132,25 @@ export default function OwnerDashboard() {
       await loadOwnerCars();
     } catch (error) {
       console.error("Toggle failed:", error);
-      alert("Transaction failed. Make sure you are the owner of this car.");
+      alert(error.reason || error.message || "Transaction failed.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyFuel = async (carId) => {
+    if (!signer) {
+      alert("Wallet not connected");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await verifyFuelRefill(signer, carId);
+      await loadOwnerCars();
+    } catch (error) {
+      console.error("Fuel verify failed:", error);
+      alert(error.reason || error.message || "Fuel verification failed.");
     } finally {
       setLoading(false);
     }
@@ -141,7 +174,9 @@ export default function OwnerDashboard() {
       let urls = [];
       if (imageFiles.length > 0) {
         try {
-          setUploadStatus(`Uploading ${imageFiles.length} photo(s) to Cloudinary…`);
+          setUploadStatus(
+            `Uploading ${imageFiles.length} photo(s) to Cloudinary…`,
+          );
           urls = await uploadImagesToCloudinary(imageFiles);
         } catch (uploadError) {
           console.error("Cloudinary upload error:", uploadError);
@@ -384,7 +419,7 @@ export default function OwnerDashboard() {
           {cars.length > 0 ? (
             <div className="card-grid owner-preview-grid">
               {cars.slice(0, 4).map((car) => {
-                const meta = getStatusMeta(car.status);
+                const meta = getStatusMeta(car.status, car.fuelStatus);
 
                 return (
                   <article key={car.id} className="owner-preview-card">
@@ -402,7 +437,9 @@ export default function OwnerDashboard() {
                       <button
                         className={meta.actionClass}
                         onClick={() =>
-                          handleToggleAvailability(car.id, car.status)
+                          meta.needsFuelVerify
+                            ? handleVerifyFuel(car.id)
+                            : handleToggleAvailability(car.id, car.status)
                         }
                         disabled={loading}
                       >

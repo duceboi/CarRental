@@ -11,6 +11,7 @@ import { Web3Context } from "../../../../context/Web3Context";
 import { rentCar } from "../../../../context/useCarRental";
 import MapPreview from "../../../../components/MapPreview";
 import { buildOsmDirectUrl, geocodeLocation } from "../../../../lib/location";
+import VehicleHistoryModal from "./VehicleHistoryModal";
 
 import "./CarCard.css";
 
@@ -22,6 +23,7 @@ export default function CarCard({ car, bookingDates, onAutoFill }) {
   const [geocoding, setGeocoding] = useState(false);
   const [mapError, setMapError] = useState("");
   const [lightboxIndex, setLightboxIndex] = useState(null);
+  const [showHistory, setShowHistory] = useState(false);
   const geocodeAbortRef = useRef(null);
 
   const carUrls = useMemo(() => {
@@ -182,6 +184,13 @@ export default function CarCard({ car, bookingDates, onAutoFill }) {
           {geocoding ? "Loading map" : showMap ? "Hide map" : "Preview map"}
         </button>
 
+        <button
+          className="ui-button ui-button--ghost"
+          onClick={() => setShowHistory(true)}
+        >
+          Track record
+        </button>
+
         {osmDirectUrl && (
           <a
             className="ui-button ui-button--soft"
@@ -300,6 +309,10 @@ export default function CarCard({ car, bookingDates, onAutoFill }) {
           </div>,
           document.body,
         )}
+
+      {showHistory && (
+        <VehicleHistoryModal car={car} onClose={() => setShowHistory(false)} />
+      )}
     </article>
   );
 }
